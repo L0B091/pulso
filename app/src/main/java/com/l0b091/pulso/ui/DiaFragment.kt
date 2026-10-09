@@ -17,6 +17,7 @@ import com.l0b091.pulso.data.Redes
 import com.l0b091.pulso.data.Tipos
 import com.l0b091.pulso.databinding.FragmentDiaBinding
 import com.l0b091.pulso.databinding.ItemPosteoBinding
+import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import kotlinx.coroutines.launch
 
 /** Orquestador: pregunta cuántos posteos, y la hora y el destino de cada uno. No propone horas. */
@@ -27,7 +28,8 @@ class DiaFragment : Fragment() {
 
     private var destinos: List<Destino> = emptyList()
     private val horas = arrayOfNulls<Int>(3)
-    private val elegidos = arrayOfNulls<Long>(3)
+    private val elegidosIg = arrayOfNulls<Long>(3)
+    private val elegidosFb = arrayOfNulls<Long>(3)
     private var cantidad = 0
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?): View {
@@ -63,15 +65,19 @@ class DiaFragment : Fragment() {
             val clips = listos.count { it.tipo == Tipos.CLIP }
             val hoy = consola.dao.enviosDelDia(consola.hoy())
             val resumen = hoy.map { e ->
-                val d = destinos.firstOrNull { it.id == e.destinoId }
-                "${e.horaTexto()} · ${Redes.nombre(d?.red)} · ${d?.nombre ?: "?"} — ${e.estado}"
+                val ig = destinos.firstOrNull { it.id == e.destinoIgId }?.nombre ?: "?"
+                val fb = destinos.firstOrNull { it.id == e.destinoFbId }?.nombre ?: "?"
+                "${e.horaTexto()} · Instagram ($ig): ${e.estadoIg} · Facebook ($fb): ${e.estadoFb}"
             }
             val vista = _b ?: return@launch
             vista.mensaje.text = buildString {
                 append("Buen día. ")
                 if (nuevo) append("Ya bajó el contenido de hoy. ")
                 append("¿Cuántos posteos hacemos hoy?")
-                if (destinos.isEmpty()) append("\n\nTodavía no cargaste destinos: agregalos en Cuentas.")
+                append("\nCada posteo sale igual en Instagram y en Facebook.")
+                if (destinos.none { it.red == Redes.INSTAGRAM } || destinos.none { it.red == Redes.FACEBOOK }) {
+                    append("\n\nNecesitás al menos un destino de Instagram y uno de Facebook: agregalos en Cuentas.")
+                }
             }
             vista.sinContenido.visibility = if (nuevo) View.GONE else View.VISIBLE
             vista.disponibles.text = "Listos para usar: $flyers flyers y $clips clips."
@@ -84,7 +90,6 @@ class DiaFragment : Fragment() {
     private fun armarFilas() {
         val vista = _b ?: return
         vista.posteos.removeAllViews()
-        val opciones = destinos.map { "${Redes.nombre(it.red)} · ${it.nombre}" }
         for (i in 0 until cantidad) {
             val fila = ItemPosteoBinding.inflate(layoutInflater, vista.posteos, false)
             fila.titulo.text = "Posteo ${i + 1}"
@@ -100,14 +105,25 @@ class DiaFragment : Fragment() {
                 }
                 picker.show(childFragmentManager, "hora$i")
             }
-            fila.destino.setSimpleItems(opciones.toTypedArray())
-            elegidos[i]?.let { id ->
-                val pos = destinos.indexOfFirst { it.id == id }
-                if (pos >= 0) fila.destino.setText(opciones[pos], false)
-            }
-            fila.destino.setOnItemClickListener { _, _, pos, _ -> elegidos[i] = destinos[pos].id }
+            enlazarDestino(fila.destinoIg, destinos.filter { it.red == Redes.INSTAGRAM }, elegidosIg, i)
+            enlazarDestino(fila.destinoFb, destinos.filter { it.red == Redes.FACEBOOK }, elegidosFb, i)
             vista.posteos.addView(fila.root)
         }
+    }
+
+    private fun enlazarDestino(
+        campo: MaterialAutoCompleteTextView,
+        lista: List<Destino>,
+        elegidos: Array<Long?>,
+        i: Int,
+    ) {
+        val opciones = lista.map { "${it.nombre} (${it.tipo})" }
+        campo.setSimpleItems(opciones.toTypedArray())
+        elegidos[i]?.let { id ->
+            val pos = lista.indexOfFirst { it.id == id }
+            if (pos >= 0) campo.setText(opciones[pos], false)
+        }
+        campo.setOnItemClickListener { _, _, pos, _ -> elegidos[i] = lista[pos].id }
     }
 
     private fun agendar() {
@@ -117,7 +133,7 @@ class DiaFragment : Fragment() {
                 .setPositiveButton("Ok", null).show()
             return
         }
-        val posteos = (0 until cantidad).map { Consola.Posteo(it + 1, horas[it], elegidos[it]) }
+        val posteos = (0 until cantidad).map { Consola.Posteo(it + 1, horas[it], elegidosIg[it], elegidosFb[it]) }
         viewLifecycleOwner.lifecycleScope.launch {
             val mensajes = consola.planificar(posteos)
             val agendados = consola.dao.enviosDelDia(consola.hoy()).count { it.estado == Estados.PENDIENTE }

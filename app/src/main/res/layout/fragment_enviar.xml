@@ -142,7 +142,8 @@
                     style="@style/Campo"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/destino">
+                    android:hint="@string/destino"
+                    app:helperText="Tocá para abrir el destino.">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/destino"
@@ -166,6 +167,7 @@
                     android:visibility="gone">
 
                     <TextView
+                        android:id="@+id/textoEnviado"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"

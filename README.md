@@ -57,29 +57,39 @@ Instalar en el teléfono (con depuración USB): `adb install -r app/build/output
      manda como `Bearer <clave>`). La URL y la clave también se guardan cifradas.
    - *Cargar paquete de prueba*: crea un flyer de prueba local, ya listo, sin GitHub.
 3. **Cuentas**: en Instagram y Facebook agregá destinos (nombre + URL). Instagram es perfil;
-   Facebook puede ser perfil o grupo. Sin destino, un post no se agenda.
+   Facebook puede ser perfil o grupo. Cada posteo necesita un destino de cada red.
 
 ## Uso diario
 
 - **Día** se abre solo la primera vez que abrís la app cada día (y desde el ícono de
-  calendario). Elegís 1, 2 o 3 posteos y, para cada uno, la hora y el destino. La app no
-  propone horas: sin hora o sin destino, ese posteo no se agenda. Si no bajó nada nuevo
+  calendario). Elegís 1, 2 o 3 posteos y, para cada uno, la hora, un destino de Instagram y
+  un destino de Facebook. Cada posteo sale igual en las dos redes. La app no propone horas:
+  si falta la hora o alguno de los dos destinos, ese posteo no se agenda. Si no bajó nada nuevo
   hoy, muestra "Sin contenido nuevo".
 - **Galería**: todos los flyers bajados y los clips que agregaste, acumulados. Deslizá hacia
   abajo para sincronizar. En cada uno: *Usar* (pasa a listo), *Rehacer* (solo flyers: manda
   el aviso para que se haga uno nuevo) y *Descartar*. Solo lo que está *listo* se agenda.
   *Agregar clip* te deja elegir un `.mp4` del teléfono; queda solo en la app, nunca va a GitHub.
 - **Orquestador**: alterna flyer y clip si tenés clips listos, y no repite el mismo flyer ni
-  el mismo ángulo en el día. Antes de cada hora sincroniza (WorkManager, unos 15 minutos antes).
-  A la hora manda una notificación; al tocarla se abre Enviar con todo armado. Si no enviaste,
-  repite el aviso a los 10 minutos; si seguís sin enviar, el post pasa a *saltado*.
-- **Enviar**: muestra la red, el flyer o clip (4:5), el texto con los 3 enlaces al final (los
-  clips llevan solo los enlaces) y el destino. Al tocar Enviar se abre el menú de compartir de
-  Android (o directo la app oficial si está instalada) y el texto queda copiado por si la app
-  no lo pega. Al volver se marca *enviado* y se abre la URL del destino. Android no avisa si
-  publicaste de verdad, por eso queda el botón *Deshacer*.
+  el mismo ángulo en el día: una pieza asignada a un posteo cuenta como usada aunque después
+  se salte. Antes de cada hora sincroniza (WorkManager, unos 15 minutos antes).
+  A la hora manda una sola notificación por posteo; al tocarla se abre Enviar con todo armado
+  para las dos redes. A los 10 minutos repite el aviso solo por las redes que todavía no
+  enviaste; si seguís sin enviar, esas redes pasan a *saltado*.
+- **Enviar**: arriba las pestañas Instagram y Facebook, cada una con su estado. Empieza por
+  Instagram. Muestra el flyer o clip (4:5), el texto con los 3 enlaces al final (los clips
+  llevan solo los enlaces) y el destino de esa red (tocalo para abrirlo). Al tocar Enviar se
+  abre la app oficial si está instalada (si no, el menú de compartir de Android) y el texto
+  queda copiado por si la app no lo pega. Al volver se marca *enviado* en esa red y pasa sola a
+  la pestaña de Facebook para tocar Enviar otra vez. Cuando salieron las dos, se abre la URL
+  del último destino. Android no avisa si publicaste de verdad, por eso cada red tiene *Deshacer*.
 
-Estados: `pendiente`, `listo`, `enviado`, `saltado`.
+Estados (por red y por posteo): `pendiente`, `listo`, `enviado`, `saltado`.
+
+## Actualizar desde 0.1
+
+Al instalar 0.2.0 encima de 0.1 se conservan flyers, clips, destinos y ajustes. Los posteos
+agendados con 0.1 se borran: hay que agendarlos de nuevo en Día.
 
 ## Limpieza
 

@@ -24,6 +24,7 @@ import com.l0b091.pulso.data.Item
 import com.l0b091.pulso.data.Redes
 import com.l0b091.pulso.data.Tipos
 import com.l0b091.pulso.databinding.FragmentEnviarBinding
+import com.google.android.material.tabs.TabLayout
 import com.l0b091.pulso.util.Medios
 import kotlinx.coroutines.launch
 import java.io.File
@@ -35,9 +36,14 @@ class EnviarFragment : Fragment() {
 
     private var envio: Envio? = null
     private var item: Item? = null
-    private var destino: Destino? = null
+    private var destinos: Map<String, Destino> = emptyMap()
+    private var redActiva: String = Redes.INSTAGRAM
+    private var redEnviando: String? = null
     private var texto: String? = null
     private var esperandoRetorno = false
+    private var pintandoPestanas = false
+
+    private val destino: Destino? get() = destinos[redActiva]
 
     private val compartir = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         alVolverDeCompartir()
@@ -51,9 +57,20 @@ class EnviarFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         consola = Consola.get(requireContext())
         esperandoRetorno = savedInstanceState?.getBoolean("esperando") ?: false
+        redEnviando = savedInstanceState?.getString("redEnviando")
+        savedInstanceState?.getString("redActiva")?.let { redActiva = it }
         b.pestanas.addTab(b.pestanas.newTab().setText("Instagram"))
         b.pestanas.addTab(b.pestanas.newTab().setText("Facebook"))
-        for (i in 0 until b.pestanas.tabCount) b.pestanas.getTabAt(i)?.view?.isClickable = false
+        b.pestanas.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab) {
+                if (pintandoPestanas) return
+                redActiva = Envio.REDES[tab.position]
+                if (_b != null && envio != null) mostrar()
+            }
+            override fun onTabUnselected(tab: TabLayout.Tab) {}
+            override fun onTabReselected(tab: TabLayout.Tab) {}
+        })
+        b.destino.setOnClickListener { destino?.url?.takeIf { it.isNotBlank() }?.let { abrirUrl(it) } }
         b.btnEnviar.setOnClickListener { enviar() }
         b.btnDeshacer.setOnClickListener { deshacer() }
         b.btnAbrirDia.setOnClickListener { (activity as? MainActivity)?.abrirDia() }
@@ -62,6 +79,8 @@ class EnviarFragment : Fragment() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putBoolean("esperando", esperandoRetorno)
+        outState.putString("redEnviando", redEnviando)
+        outState.putString("redActiva", redActiva)
     }
 
     override fun onResume() {
@@ -80,7 +99,14 @@ class EnviarFragment : Fragment() {
             val e = consola.envioParaMostrar(pedido)
             envio = e
             item = e?.itemId?.let { consola.dao.item(it) }
-            destino = e?.let { consola.dao.destino(it.destinoId) }
+            destinos = if (e == null) emptyMap() else buildMap {
+                consola.dao.destino(e.destinoIgId)?.let { put(Redes.INSTAGRAM, it) }
+                consola.dao.destino(e.destinoFbId)?.let { put(Redes.FACEBOOK, it) }
+            }
+            // Instagram primero; después la primera red que falte.
+            if (e != null && e.estadoDe(redActiva) !in listOf(Estados.PENDIENTE, Estados.LISTO)) {
+                e.redesAbiertas().firstOrNull()?.let { redActiva = it }
+            }
             if (_b != null) mostrar()
         }
     }
@@ -100,8 +126,12 @@ class EnviarFragment : Fragment() {
         b.pestanas.visibility = View.VISIBLE
 
         val d = destino
-        val pestana = if (d?.red == Redes.FACEBOOK) 1 else 0
-        b.pestanas.selectTab(b.pestanas.getTabAt(pestana))
+        pintandoPestanas = true
+        Envio.REDES.forEachIndexed { i, red ->
+            b.pestanas.getTabAt(i)?.text = "${Redes.nombre(red)} · ${e.estadoDe(red)}"
+        }
+        b.pestanas.selectTab(b.pestanas.getTabAt(Envio.REDES.indexOf(redActiva)))
+        pintandoPestanas = false
 
         b.lineaEstado.text = "Posteo ${e.orden} · ${e.horaTexto()} · ${e.estado}"
         b.destino.setText(if (d == null) "Sin destino" else "${d.nombre} (${d.tipo}) · ${d.url}")
@@ -128,15 +158,21 @@ class EnviarFragment : Fragment() {
                 b.texto.text = texto
             }
         }
-        if (d == null) avisos += "Este posteo no tiene destino."
+        if (d == null) avisos += "Este posteo no tiene destino en ${Redes.nombre(redActiva)}."
         b.aviso.visibility = if (avisos.isEmpty()) View.GONE else View.VISIBLE
         b.aviso.text = avisos.joinToString("\n")
 
-        val enviado = e.estado == Estados.ENVIADO
+        val estadoRed = e.estadoDe(redActiva)
+        val enviado = estadoRed == Estados.ENVIADO
         b.bandaEnviado.visibility = if (enviado) View.VISIBLE else View.GONE
-        b.btnEnviar.text = getString(if (enviado) R.string.enviado else R.string.enviar)
+        b.textoEnviado.text = "Marcado como enviado en ${Redes.nombre(redActiva)}."
+        b.btnEnviar.text = when (estadoRed) {
+            Estados.ENVIADO -> getString(R.string.enviado)
+            Estados.SALTADO -> "Saltado"
+            else -> getString(R.string.enviar)
+        }
         b.btnEnviar.isEnabled = !enviado && texto != null && d != null && it != null &&
-            e.estado != Estados.SALTADO
+            estadoRed != Estados.SALTADO
     }
 
     private fun enviar() {
@@ -163,7 +199,7 @@ class EnviarFragment : Fragment() {
             clipData = ClipData.newRawUri("", uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        val paquete = when (destino?.red) {
+        val paquete = when (redActiva) {
             Redes.INSTAGRAM -> "com.instagram.android"
             Redes.FACEBOOK -> "com.facebook.katana"
             else -> null
@@ -177,6 +213,7 @@ class EnviarFragment : Fragment() {
         Toast.makeText(ctx, "Texto copiado. Si la app no lo pega sola, mantené apretado y pegá.", Toast.LENGTH_LONG).show()
         try {
             esperandoRetorno = true
+            redEnviando = redActiva
             compartir.launch(intent)
         } catch (e: ActivityNotFoundException) {
             esperandoRetorno = false
@@ -184,27 +221,41 @@ class EnviarFragment : Fragment() {
         }
     }
 
-    /** Android no avisa si se publicó de verdad: al volver se marca enviado y queda Deshacer. */
+    /**
+     * Android no avisa si se publicó de verdad: al volver se marca enviada esa red y queda Deshacer.
+     * Si falta la otra red, se pasa a su pestaña. Cuando ya salieron las dos, se abre el destino.
+     */
     private fun alVolverDeCompartir() {
         esperandoRetorno = false
         val e = envio ?: return
-        val url = destino?.url
+        val red = redEnviando ?: redActiva
+        redEnviando = null
+        val url = destinos[red]?.url
         lifecycleScope.launch {
-            consola.marcarEnviado(e.id)
-            if (_b != null) cargar()
-            if (!url.isNullOrBlank()) {
-                try {
-                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-                } catch (_: Exception) {
-                }
+            consola.marcarEnviado(e.id, red)
+            val actualizado = consola.dao.envio(e.id)
+            val siguiente = actualizado?.redesAbiertas()?.firstOrNull()
+            if (siguiente != null) {
+                redActiva = siguiente
+            } else if (!url.isNullOrBlank()) {
+                abrirUrl(url)
             }
+            if (_b != null) cargar()
+        }
+    }
+
+    private fun abrirUrl(url: String) {
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        } catch (_: Exception) {
         }
     }
 
     private fun deshacer() {
         val e = envio ?: return
+        val red = redActiva
         lifecycleScope.launch {
-            consola.deshacerEnviado(e.id)
+            consola.deshacerEnviado(e.id, red)
             if (_b != null) cargar()
         }
     }

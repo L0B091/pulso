@@ -23,15 +23,30 @@
         android:text="Elegir hora" />
 
     <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/campoDestino"
+        android:id="@+id/campoIg"
         style="@style/Campo.Desplegable"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:hint="Destino">
+        android:hint="Destino en Instagram">
 
         <com.google.android.material.textfield.MaterialAutoCompleteTextView
-            android:id="@+id/destino"
+            android:id="@+id/destinoIg"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="none" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/campoFb"
+        style="@style/Campo.Desplegable"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:hint="Destino en Facebook">
+
+        <com.google.android.material.textfield.MaterialAutoCompleteTextView
+            android:id="@+id/destinoFb"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="none" />

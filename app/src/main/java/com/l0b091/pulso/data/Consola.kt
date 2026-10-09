@@ -228,14 +228,17 @@ class Consola private constructor(private val context: Context) {
 
     // ---------- Orquestador ----------
 
-    data class Posteo(val orden: Int, val horaMin: Int?, val destinoId: Long?)
+    /** Un posteo del día: misma pieza a Instagram y a Facebook. Las dos redes son obligatorias. */
+    data class Posteo(val orden: Int, val horaMin: Int?, val destinoIgId: Long?, val destinoFbId: Long?)
 
-    /** Elige contenido: alterna flyer y clip si hay clips listos; no repite flyer ni ángulo en el día. */
+    /**
+     * Elige contenido: alterna flyer y clip si hay clips listos. Una pieza asignada a un posteo
+     * cuenta como usada en el día (aunque después se salte): no se repite flyer, clip ni ángulo.
+     */
     private suspend fun elegir(dia: String, excluirEnvio: Long?, tipoAnterior: String?): Item? {
         val delDia = dao.enviosDelDia(dia).filter { it.id != excluirEnvio }
         val usados = delDia.mapNotNull { it.itemId }.toSet()
-        val angulosUsados = delDia.filter { it.estado != Estados.SALTADO }
-            .mapNotNull { e -> e.itemId?.let { dao.item(it) } }
+        val angulosUsados = usados.mapNotNull { dao.item(it) }
             .filter { it.tipo == Tipos.FLYER }
             .mapNotNull { it.angulo }.toSet()
         val listos = dao.itemsListos().filter { it.id !in usados && File(it.mediaPath!!).exists() }
@@ -250,51 +253,55 @@ class Consola private constructor(private val context: Context) {
 
     private suspend fun tipoAnterior(dia: String, horaMin: Int, excluirEnvio: Long?): String? =
         dao.enviosDelDia(dia)
-            .filter { it.id != excluirEnvio && it.horaMin <= horaMin && it.estado != Estados.SALTADO }
+            .filter { it.id != excluirEnvio && it.horaMin <= horaMin && it.itemId != null }
             .maxByOrNull { it.horaMin }
             ?.itemId?.let { dao.item(it) }?.tipo
 
-    /** Agenda los posteos del día. Sin hora o sin destino, ese posteo no se agenda. */
+    /** Agenda los posteos del día. Sin hora, sin destino de Instagram o sin destino de Facebook, no se agenda. */
     suspend fun planificar(posteos: List<Posteo>): List<String> = withContext(Dispatchers.IO) {
         candado.withLock {
             val dia = hoy()
             val mensajes = mutableListOf<String>()
-            // Reemplaza lo que estaba agendado y todavía no sonó.
-            for (e in dao.enviosDelDia(dia).filter { it.estado == Estados.PENDIENTE }) {
+            // Reemplaza lo que estaba agendado y todavía no sonó (libera su contenido).
+            for (e in dao.enviosDelDia(dia).filter { it.estado == Estados.PENDIENTE && !it.algunaEnviada() }) {
                 Alarmas.cancelar(context, e.id)
                 dao.borrarEnvio(e)
             }
             val ahora = System.currentTimeMillis()
             for (p in posteos.sortedBy { it.horaMin ?: Int.MAX_VALUE }) {
                 val n = p.orden
-                if (p.horaMin == null) { mensajes += "Posteo $n: sin hora, no se agendó."; continue }
-                if (p.destinoId == null) { mensajes += "Posteo $n: sin destino, no se agendó."; continue }
-                val destino = dao.destino(p.destinoId)
-                if (destino == null) { mensajes += "Posteo $n: el destino ya no existe."; continue }
-                val cuando = msDeHora(dia, p.horaMin)
+                val faltan = buildList {
+                    if (p.horaMin == null) add("hora")
+                    if (p.destinoIgId == null) add("destino de Instagram")
+                    if (p.destinoFbId == null) add("destino de Facebook")
+                }
+                if (faltan.isNotEmpty()) { mensajes += "Posteo $n: falta ${faltan.joinToString(", ")}, no se agendó."; continue }
+                val ig = dao.destino(p.destinoIgId!!)?.takeIf { it.red == Redes.INSTAGRAM }
+                val fb = dao.destino(p.destinoFbId!!)?.takeIf { it.red == Redes.FACEBOOK }
+                if (ig == null || fb == null) { mensajes += "Posteo $n: un destino ya no existe, no se agendó."; continue }
+                val cuando = msDeHora(dia, p.horaMin!!)
                 if (cuando <= ahora) { mensajes += "Posteo $n: esa hora ya pasó."; continue }
                 val item = elegir(dia, null, tipoAnterior(dia, p.horaMin, null))
                 val envio = Envio(
-                    dia = dia, orden = n, horaMin = p.horaMin, destinoId = destino.id,
+                    dia = dia, orden = n, horaMin = p.horaMin, destinoIgId = ig.id, destinoFbId = fb.id,
                     itemId = item?.id, estado = Estados.PENDIENTE,
                 )
                 val id = dao.insertarEnvio(envio)
                 Alarmas.programar(context, id, 0, cuando)
                 Alarmas.programarSync(context, id, cuando)
-                mensajes += "Posteo $n: ${envio.horaTexto()} en ${Redes.nombre(destino.red)} · ${destino.nombre}" +
-                    if (item == null) " (todavía sin contenido listo)" else ""
+                mensajes += "Posteo $n: ${envio.horaTexto()} · Instagram (${ig.nombre}) y Facebook (${fb.nombre})" +
+                    if (item == null) " — todavía sin contenido listo" else ""
             }
             mensajes
         }
     }
 
-    /** Verifica que el envío tenga contenido válido; si no, elige otro. */
+    /** Verifica que el envío tenga contenido válido; si no, elige otro. Si ya salió en una red, no se cambia. */
     suspend fun asegurarItem(envio: Envio): Envio {
-        if (envio.estado == Estados.ENVIADO || envio.estado == Estados.SALTADO) return envio
+        if (envio.redesAbiertas().isEmpty() || envio.algunaEnviada()) return envio
         val actual = envio.itemId?.let { dao.item(it) }
         val valido = actual != null && !actual.descartado && actual.mediaPath != null &&
-            File(actual.mediaPath).exists() &&
-            actual.estado == Estados.LISTO
+            File(actual.mediaPath).exists() && actual.estado == Estados.LISTO
         if (valido) return envio
         val nuevo = elegir(envio.dia, envio.id, tipoAnterior(envio.dia, envio.horaMin, envio.id))
         val e = envio.copy(itemId = nuevo?.id)
@@ -302,42 +309,58 @@ class Consola private constructor(private val context: Context) {
         return e
     }
 
-    /** Lo llama la alarma. Intento 0: aviso. Intento 1: reintento a los 10 min. Intento 2: saltado. */
+    private fun nombresRedes(redes: List<String>) = redes.joinToString(" y ") { Redes.nombre(it) }
+
+    /**
+     * Lo llama la alarma. Intento 0: aviso. Intento 1: reintento a los 10 min, solo por las redes
+     * que faltan. Intento 2: las redes que siguen sin enviar pasan a saltado.
+     */
     suspend fun alDispararse(envioId: Long, intento: Int) = candado.withLock {
         var envio = dao.envio(envioId) ?: return@withLock
-        if (envio.estado == Estados.ENVIADO || envio.estado == Estados.SALTADO) return@withLock
+        val abiertas = envio.redesAbiertas()
+        if (abiertas.isEmpty()) return@withLock
         if (intento >= 2) {
-            dao.actualizarEnvio(envio.copy(estado = Estados.SALTADO, intento = intento))
-            envio.itemId?.let { id -> dao.item(id)?.let { dao.guardarItem(it.copy(estado = Estados.SALTADO)) } }
+            for (red in abiertas) envio = envio.conEstado(red, Estados.SALTADO)
+            envio = envio.copy(intento = intento).recalcular()
+            dao.actualizarEnvio(envio)
+            if (!envio.algunaEnviada()) {
+                envio.itemId?.let { id -> dao.item(id)?.let { dao.guardarItem(it.copy(estado = Estados.SALTADO)) } }
+            }
             Avisos.cancelar(context, envioId)
             return@withLock
         }
-        envio = asegurarItem(envio).copy(estado = Estados.LISTO, intento = intento)
+        envio = asegurarItem(envio)
+        for (red in abiertas) envio = envio.conEstado(red, Estados.LISTO)
+        envio = envio.copy(estado = Estados.LISTO, intento = intento)
         dao.actualizarEnvio(envio)
-        val destino = dao.destino(envio.destinoId)
-        val red = Redes.nombre(destino?.red)
-        val titulo = if (intento == 0) "Es hora de publicar en $red" else "Recordatorio: falta publicar en $red"
+        val redes = nombresRedes(abiertas)
+        val titulo = if (intento == 0) "Es hora de publicar en $redes" else "Recordatorio: falta publicar en $redes"
         val texto = if (envio.itemId == null) {
             "Posteo ${envio.orden} de las ${envio.horaTexto()}: no hay contenido listo. Elegí uno en Galería."
         } else {
-            "Posteo ${envio.orden} · ${destino?.nombre ?: "sin destino"}. Está todo armado: abrí y tocá Enviar."
+            "Posteo ${envio.orden} de las ${envio.horaTexto()}. Está todo armado: abrí y tocá Enviar en $redes."
         }
         Avisos.mostrar(context, envioId, titulo, texto)
         Alarmas.programar(context, envioId, intento + 1, System.currentTimeMillis() + Alarmas.REINTENTO_MS)
     }
 
-    suspend fun marcarEnviado(envioId: Long) = candado.withLock {
+    /** Marca una red como enviada. Si ya salieron las dos, se cancelan los avisos. */
+    suspend fun marcarEnviado(envioId: Long, red: String) = candado.withLock {
         val e = dao.envio(envioId) ?: return@withLock
-        dao.actualizarEnvio(e.copy(estado = Estados.ENVIADO, enviadoMs = System.currentTimeMillis()))
+        val nuevo = e.conEstado(red, Estados.ENVIADO, System.currentTimeMillis()).recalcular()
+        dao.actualizarEnvio(nuevo)
         e.itemId?.let { id -> dao.item(id)?.let { dao.guardarItem(it.copy(estado = Estados.ENVIADO)) } }
-        Alarmas.cancelar(context, envioId)
         Avisos.cancelar(context, envioId)
+        if (nuevo.redesAbiertas().isEmpty()) Alarmas.cancelar(context, envioId)
     }
 
-    suspend fun deshacerEnviado(envioId: Long) = candado.withLock {
+    suspend fun deshacerEnviado(envioId: Long, red: String) = candado.withLock {
         val e = dao.envio(envioId) ?: return@withLock
-        dao.actualizarEnvio(e.copy(estado = Estados.LISTO, enviadoMs = null))
-        e.itemId?.let { id -> dao.item(id)?.let { dao.guardarItem(it.copy(estado = Estados.LISTO)) } }
+        val nuevo = e.conEstado(red, Estados.LISTO, null).recalcular()
+        dao.actualizarEnvio(nuevo)
+        if (!nuevo.algunaEnviada()) {
+            e.itemId?.let { id -> dao.item(id)?.let { dao.guardarItem(it.copy(estado = Estados.LISTO)) } }
+        }
     }
 
     /** Qué muestra la pantalla Enviar: el pedido, o el próximo listo/pendiente de hoy, o el último enviado. */
@@ -346,7 +369,7 @@ class Consola private constructor(private val context: Context) {
         val delDia = dao.enviosDelDia(hoy())
         val elegido = delDia.firstOrNull { it.estado == Estados.LISTO }
             ?: delDia.firstOrNull { it.estado == Estados.PENDIENTE }
-            ?: return delDia.filter { it.estado == Estados.ENVIADO }.maxByOrNull { it.enviadoMs ?: 0 }
+            ?: return delDia.filter { it.algunaEnviada() }.maxByOrNull { it.ultimoEnvioMs() }
         return asegurarItem(elegido)
     }
 
@@ -355,7 +378,9 @@ class Consola private constructor(private val context: Context) {
         val ahora = System.currentTimeMillis()
         for (e in dao.enviosActivos()) {
             if (e.dia != hoy()) {
-                dao.actualizarEnvio(e.copy(estado = Estados.SALTADO))
+                var cerrado = e
+                for (red in e.redesAbiertas()) cerrado = cerrado.conEstado(red, Estados.SALTADO)
+                dao.actualizarEnvio(cerrado.recalcular())
                 continue
             }
             when (e.estado) {
