@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="6dp"
+    app:cardBackgroundColor="@color/azul_tarjeta"
+    app:cardCornerRadius="16dp"
+    app:strokeColor="@color/azul_borde">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/miniatura"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="@color/azul"
+                android:contentDescription="Miniatura"
+                android:scaleType="centerCrop"
+                app:layout_constraintDimensionRatio="4:5"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageView
+                android:id="@+id/iconoClip"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:contentDescription="Clip"
+                android:src="@drawable/ic_play"
+                app:layout_constraintBottom_toBottomOf="@id/miniatura"
+                app:layout_constraintEnd_toEndOf="@id/miniatura"
+                app:layout_constraintStart_toStartOf="@id/miniatura"
+                app:layout_constraintTop_toTopOf="@id/miniatura" />
+
+            <TextView
+                android:id="@+id/estado"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:background="@drawable/fondo_etiqueta"
+                android:paddingStart="8dp"
+                android:paddingTop="2dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="2dp"
+                android:textColor="@color/naranja"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <TextView
+            android:id="@+id/detalle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="10dp"
+            android:paddingTop="6dp"
+            android:paddingEnd="10dp"
+            android:textColor="@color/claro_tenue"
+            android:textSize="12sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnUsar"
+                style="@style/Boton.Chico"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/usar" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnRehacer"
+                style="@style/Boton.Chico"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/rehacer" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDescartar"
+                style="@style/Boton.Chico"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/descartar"
+                android:textColor="@color/claro_tenue" />
+        </LinearLayout>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

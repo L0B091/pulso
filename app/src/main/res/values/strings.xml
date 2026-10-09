@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Pulso</string>
+    <string name="nav_enviar">Enviar</string>
+    <string name="nav_galeria">Galería</string>
+    <string name="nav_cuentas">Cuentas</string>
+    <string name="menu_dia">Día</string>
+    <string name="menu_ajustes">Ajustes</string>
+    <string name="enviar">Enviar</string>
+    <string name="enviado">Enviado</string>
+    <string name="deshacer">Deshacer</string>
+    <string name="abrir_dia">Abrir Día</string>
+    <string name="agregar_clip">Agregar clip</string>
+    <string name="usar">Usar</string>
+    <string name="rehacer">Rehacer</string>
+    <string name="descartar">Descartar</string>
+    <string name="agendar">Agendar</string>
+    <string name="guardar">Guardar</string>
+    <string name="destino">Destino</string>
+</resources>

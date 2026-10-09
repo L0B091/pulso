@@ -1,0 +1,10 @@
+{
+  "id": "prueba-001",
+  "estado": "pendiente",
+  "tipo": "flyer",
+  "redSugerida": null,
+  "texto": "¿Tus clientes te preguntan los precios a cada rato? Con una app Android para tu negocio los ven en su teléfono, sin servidor y sin cuota mensual.",
+  "flyer": "flyer.jpg",
+  "angulo": "problema",
+  "creadoEn": "2026-10-09T00:00:00-03:00"
+}

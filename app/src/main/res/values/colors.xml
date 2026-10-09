@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="azul">#0B1F3A</color>
+    <color name="azul_tarjeta">#14305A</color>
+    <color name="azul_borde">#24477A</color>
+    <color name="naranja">#FF7A1A</color>
+    <color name="claro">#F4F7FB</color>
+    <color name="claro_tenue">#A9B8CC</color>
+</resources>

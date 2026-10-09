@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/azul"
+    android:orientation="vertical">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/azul"
+        app:title="Ajustes"
+        app:titleTextColor="@color/claro" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView style="@style/Seccion" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:text="Enlaces fijos (obligatorios)" />
+
+            <com.google.android.material.textfield.TextInputLayout style="@style/Campo" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="WhatsApp">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/enlaceWhatsapp" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="textUri" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout style="@style/Campo" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Comentar en Instagram">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/enlaceInstagram" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="textUri" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout style="@style/Campo" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Comentar en Facebook">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/enlaceFacebook" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="textUri" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView style="@style/Seccion" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="GitHub" />
+
+            <com.google.android.material.textfield.TextInputLayout style="@style/Campo" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Token (se guarda cifrado)" app:endIconMode="password_toggle">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/token" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="textPassword" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout style="@style/Campo" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Repositorio (dueño/repo)">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/repo" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="text" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout style="@style/Campo" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Rama">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/rama" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="text" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView android:id="@+id/ultimoSync" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:textColor="@color/claro_tenue" />
+
+            <com.google.android.material.button.MaterialButton android:id="@+id/btnSincronizar" style="@style/Boton.Texto" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Sincronizar ahora" />
+
+            <TextView style="@style/Seccion" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Aviso de rehacer" />
+
+            <com.google.android.material.textfield.TextInputLayout style="@style/Campo" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="URL del aviso">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/avisoUrl" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="textUri" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout style="@style/Campo" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Clave del aviso" app:endIconMode="password_toggle">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/avisoClave" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="textPassword" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout style="@style/Campo" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Header de la clave" app:helperText="Si es Authorization, se manda como Bearer &lt;clave&gt;.">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/avisoHeader" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="text" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView style="@style/Seccion" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Permisos" />
+
+            <TextView android:id="@+id/estadoPermisos" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:lineSpacingExtra="4dp" android:textColor="@color/claro" />
+
+            <com.google.android.material.button.MaterialButton android:id="@+id/btnPermisos" style="@style/Boton.Texto" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Revisar permisos" />
+
+            <TextView style="@style/Seccion" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Prueba" />
+
+            <com.google.android.material.button.MaterialButton android:id="@+id/btnPrueba" style="@style/Boton.Texto" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Cargar paquete de prueba" />
+        </LinearLayout>
+    </ScrollView>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnGuardar"
+        style="@style/Boton.Principal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:text="@string/guardar" />
+</LinearLayout>

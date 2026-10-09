@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Forma.Pulso" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style>
+
+    <style name="Theme.Pulso" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">@color/naranja</item>
+        <item name="colorOnPrimary">@color/azul</item>
+        <item name="colorPrimaryContainer">@color/naranja</item>
+        <item name="colorOnPrimaryContainer">@color/azul</item>
+        <item name="colorSecondary">@color/naranja</item>
+        <item name="colorOnSecondary">@color/azul</item>
+        <item name="colorSecondaryContainer">@color/azul_borde</item>
+        <item name="colorOnSecondaryContainer">@color/claro</item>
+        <item name="android:colorBackground">@color/azul</item>
+        <item name="colorOnBackground">@color/claro</item>
+        <item name="colorSurface">@color/azul</item>
+        <item name="colorOnSurface">@color/claro</item>
+        <item name="colorOnSurfaceVariant">@color/claro_tenue</item>
+        <item name="colorSurfaceContainer">@color/azul_tarjeta</item>
+        <item name="colorSurfaceContainerLow">@color/azul_tarjeta</item>
+        <item name="colorSurfaceContainerHigh">@color/azul_tarjeta</item>
+        <item name="colorSurfaceContainerHighest">@color/azul_tarjeta</item>
+        <item name="colorOutline">@color/azul_borde</item>
+        <item name="android:textColorPrimary">@color/claro</item>
+        <item name="android:textColorSecondary">@color/claro_tenue</item>
+        <item name="android:statusBarColor">@color/azul</item>
+        <item name="android:navigationBarColor">@color/azul</item>
+        <item name="shapeAppearanceCornerSmall">@style/Forma.Pulso</item>
+        <item name="shapeAppearanceCornerMedium">@style/Forma.Pulso</item>
+        <item name="shapeAppearanceCornerLarge">@style/Forma.Pulso</item>
+        <item name="shapeAppearanceSmallComponent">@style/Forma.Pulso</item>
+        <item name="shapeAppearanceMediumComponent">@style/Forma.Pulso</item>
+        <item name="shapeAppearanceLargeComponent">@style/Forma.Pulso</item>
+    </style>
+
+    <style name="Boton.Principal" parent="Widget.Material3.Button">
+        <item name="cornerRadius">16dp</item>
+        <item name="android:minHeight">60dp</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="backgroundTint">@color/naranja</item>
+        <item name="android:textColor">@color/azul</item>
+    </style>
+
+    <style name="Boton.Texto" parent="Widget.Material3.Button.TextButton">
+        <item name="android:textColor">@color/naranja</item>
+    </style>
+
+    <style name="Boton.Chico" parent="Widget.Material3.Button.TextButton">
+        <item name="android:textColor">@color/naranja</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:minHeight">36dp</item>
+        <item name="android:paddingStart">6dp</item>
+        <item name="android:paddingEnd">6dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+    </style>
+
+    <style name="Boton.Contorno" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="cornerRadius">16dp</item>
+        <item name="android:textColor">@color/claro</item>
+        <item name="strokeColor">@color/azul_borde</item>
+    </style>
+
+    <style name="Campo" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxCornerRadiusTopStart">16dp</item>
+        <item name="boxCornerRadiusTopEnd">16dp</item>
+        <item name="boxCornerRadiusBottomStart">16dp</item>
+        <item name="boxCornerRadiusBottomEnd">16dp</item>
+        <item name="boxStrokeColor">@color/naranja</item>
+        <item name="hintTextColor">@color/naranja</item>
+        <item name="android:layout_marginTop">12dp</item>
+    </style>
+
+    <style name="Campo.Desplegable" parent="Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+        <item name="boxCornerRadiusTopStart">16dp</item>
+        <item name="boxCornerRadiusTopEnd">16dp</item>
+        <item name="boxCornerRadiusBottomStart">16dp</item>
+        <item name="boxCornerRadiusBottomEnd">16dp</item>
+        <item name="boxStrokeColor">@color/naranja</item>
+        <item name="hintTextColor">@color/naranja</item>
+    </style>
+
+    <style name="Titulo" parent="">
+        <item name="android:textColor">@color/claro</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Seccion" parent="">
+        <item name="android:textColor">@color/naranja</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:layout_marginTop">20dp</item>
+    </style>
+</resources>
